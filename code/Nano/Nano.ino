@@ -1,13 +1,15 @@
 #include <avr/sleep.h>
-#include <SPI.h>
-#include <SD.h>
+#include <SdFat.h>
 #include <TMRpcm.h>
 #include <SPI.h>
-#include <SD.h>
-#define CHIP_SELECT_PIN  10
+//#include <SD.h>
+
+#define SD_ChipSelectPin 10  //use digital pin 4 on arduino Uno, nano etc, or can use other pins
+//#define CHIP_SELECT_PIN  10
 #define SPEAKER_PIN      9
 #define RAIL_EN 2   // Mosfet Gate Pin
 
+SdFat sd;
 TMRpcm tmrpcm;
 
 void setup() {
@@ -22,15 +24,17 @@ void setup() {
   
 
   digitalWrite(RAIL_EN, LOW);   // enable Rail
+  
   Serial.print("Initializing SD card...");
-  if (!SD.begin(CHIP_SELECT_PIN)) {
+  
+  if ( !sd.begin(SD_ChipSelectPin, SPI_FULL_SPEED) ) {
     Serial.println("Failed!");
   }
   else{
     Serial.println("Done.");
-    if (SD.exists("001.wav")) {
+    if (sd.exists("001.wav")) {
       Serial.println("001.wav exists, attempt to play");
-      tmrpcm.setVolume(3);
+      //tmrpcm.setVolume(6);    //1-7
       tmrpcm.play( "001.wav" );
       while(tmrpcm.isPlaying()){
         delay(1);
@@ -55,7 +59,7 @@ void loop() {
   digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
   delay(2000);
   Serial.println("going to sleep");
-  delay(10);
+  delay(100);
   digitalWrite(RAIL_EN, HIGH);
   digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
   sleep_cpu ();
