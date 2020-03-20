@@ -1,64 +1,47 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include "AudioFileSourceSD.h"
-//#include "AudioOutputSPDIF.h"
 #include "AudioOutputI2SNoDAC.h"
 //#include "AudioGeneratorFLAC.h"
 #include "AudioGeneratorMP3.h"
 //#include "AudioGeneratorWAV.h"
 
-// For this sketch, you need connected SD card with '.flac' music files in the root
-// directory. Some samples with various sampling rates are available from i.e. 
-// Espressif Audio Development Framework at:
-// https://docs.espressif.com/projects/esp-adf/en/latest/design-guide/audio-samples.html
-//
-// On ESP8266 you might need to reencode FLAC files with max '-2' compression level 
-// (i.e. 1152 maximum block size) or you will run out of memory. FLAC files will be 
-// slightly bigger but you don't loose audio quality with reencoding (lossles codec).
-
 // You may need a fast SD card. Set this as high as it will work (40MHz max).
-#define SPI_SPEED SD_SCK_MHZ(40)
+#define SPI_SPEED SD_SCK_MHZ(20)
 
-// On ESP32 you can adjust the SPDIF_OUT_PIN (GPIO number). 
-// On ESP8266 it is fixed to GPIO3/RX0 and this setting has no effect
-#define SPDIF_OUT_PIN 27
-#define SS D0
+#define SS D0   // Chip Select SD Card
 
 File dir;
 AudioFileSourceSD *source = NULL;
-//AudioOutputSPDIF *output = NULL;
 AudioOutputI2SNoDAC *output = NULL;
-//AudioGeneratorFLAC *decoder = NULL;
 AudioGeneratorMP3 *decoder = NULL;
-//AudioGeneratorWAV *decoder = NULL;
 
 void setup() {
   WiFi.mode(WIFI_OFF);
+  WiFi.forceSleepBegin();
   Serial.begin(115200);
   Serial.println();
+  pinMode(LED_BUILTIN, OUTPUT);     // Initialize the LED_BUILTIN pin as an output
+  digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
   delay(1000);
 
   audioLogger = &Serial;  
   source = new AudioFileSourceSD();
-  //output = new AudioOutputSPDIF(SPDIF_OUT_PIN);
-  output = new AudioOutputI2SNoDAC();
+//  output = new AudioOutputI2SNoDAC();
   //decoder = new AudioGeneratorFLAC();
-  decoder = new AudioGeneratorMP3();
+//  decoder = new AudioGeneratorMP3();
   //decoder = new AudioGeneratorWAV();
 
-  // NOTE: SD.begin(...) should be called AFTER AudioOutputSPDIF() 
-  //       to takover the the SPI pins if they share some with I2S
-  //       (i.e. D8 on Wemos D1 mini is both I2S BCK and SPI SS)
-  #if defined(ESP8266)
-    SD.begin(SS, SPI_SPEED);  //TODO: add if
-  #else
-    SD.begin();
-  #endif
+  SD.begin(SS, SPI_SPEED);  //TODO: add if
   dir = SD.open("/");
+  digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
 }
 
 void loop() {
-  if ((decoder) && (decoder->isRunning())) {
+  ESP.deepSleep(0);
+
+/*  
+ if ((decoder) && (decoder->isRunning())) {
     if (!decoder->loop()) decoder->stop();
   } else {
     File file = dir.openNextFile();
@@ -74,7 +57,8 @@ void loop() {
       } 
     } else {
       Serial.println(F("Playback form SD card done\n"));
+      
       delay(1000);
     }       
-  }
+  }*/
 }
