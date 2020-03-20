@@ -30,10 +30,12 @@ void setup() {
     Serial.println("Done.");
     if (SD.exists("001.wav")) {
       Serial.println("001.wav exists, attempt to play");
+      tmrpcm.setVolume(3);
       tmrpcm.play( "001.wav" );
-      for(int i=0; i<5000; i++){
+      while(tmrpcm.isPlaying()){
         delay(1);
       }
+      tmrpcm.disable();
       /*File myFile = SD.open("001.wav");
       if (myFile) {
       }
